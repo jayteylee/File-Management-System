@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+// cat /dev/zero > /dev/memdrv
+
 /**
  * This program should take take a command-line argument, which is the name of a file that 
  * you want to store in /dev/memdrv.
@@ -20,7 +22,7 @@
 */
 
 
-static char buf[BLOCK_SIZE];
+static char fileBuf[BLOCK_SIZE], indirectBuf[BLOCK_SIZE];
 
 int main(int argc, char *argv[]) {
     
@@ -30,15 +32,48 @@ int main(int argc, char *argv[]) {
     }
 
     int fd, res;
+    int size;
+    struct stat st;
+    Inode *inode = malloc(BLOCK_SIZE);
 
     open_device();
-
-    for()
     fd = open(argv[1], O_RDONLY);
-    read(fd, buf, 128);
+    fstat(fd, &st);
+    size = st.st_size;
 
+    inode->size = size;
+    int numBlocks = size/BLOCK_SIZE + 1;
 
-    write_block(1, buf);
+    if(numBlocks > 77){
+        printf("truncated\n");
+        numBlocks = 77;
+    }
+
+    for(int i = 1; i <= numBlocks; i++){
+        if(i != 13){
+            read(fd, fileBuf, BLOCK_SIZE);
+            write_block(i, fileBuf);
+        }
+        if(i < 14){
+            inode->addrs[i - 1] = i;
+        } 
+        else{
+            indirectBuf[i - 14] = i;
+        }
+        
+        
+        // read_block(n, fileBuf);
+
+    }
+
+    write_block(0, (char *)inode);
+    write_block(inode->addrs[NDIRECT], indirectBuf);
+
+    printf("file stored\n");
+
     // read_block(n, buf);
+    
+    
+
     return EXIT_SUCCESS;
 }
