@@ -7,7 +7,7 @@ PWD	:= $(shell pwd)
 
 CFLAGS := -W -Wall -pedantic -g
 
-all: module debug
+all: module debug store-prog retrieve-prog debug2
 
 module:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
@@ -24,4 +24,6 @@ retrieve-prog: retrieve.c libmemdrv.c libmemdrv.h fs.h
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 	rm -f debug
-
+	
+debug2: debug2.c libmemdrv.c libmemdrv.h fs.h
+	gcc $(CFLAGS) -o debug2 debug2.c libmemdrv.c
