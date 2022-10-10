@@ -32,9 +32,9 @@ static int8_t free_list[MAX_BID];
 static char fileBuf[BLOCK_SIZE], indirectBuf[BLOCK_SIZE];
 int fd, size, numBlocks;
 struct stat st;
-Inode *inode = malloc(BLOCK_SIZE);
 
 int main(int argc, char *argv[]) {
+    Inode *inode = malloc(BLOCK_SIZE);
     //initialising the free list
     for(int i = 0; i < MAX_BID; i++){
         free_list[i] = i;
@@ -63,23 +63,24 @@ int main(int argc, char *argv[]) {
     if(numBlocks > 76){
         printf("truncated\n");
         numBlocks = 76;
+    }else if(numBlocks < 13){
+        numBlocks--;
     }
 
     //reads in the file and stores across the blocks
-    for(int i = 1; i <= numBlocks + 1; i++){
+    for(int i = 1; i <= numBlocks+1; i++){
         if(i != 13){
             read(fd, fileBuf, BLOCK_SIZE);
             write_block(free_list[i], fileBuf);
         }
         if(i < 14){
             inode->addrs[i - 1] = free_list[i];
-        } 
-        else{
+        }else{
             indirectBuf[i - 14] = free_list[i];
         }
     }
-    write_block(0, (char *)inode);
     write_block(inode->addrs[NDIRECT], indirectBuf);
+    write_block(0, (char *)inode);
     printf("file stored\n");
     return EXIT_SUCCESS;
 }

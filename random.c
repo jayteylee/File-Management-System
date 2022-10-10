@@ -1,5 +1,6 @@
 
 // the free list should be initialised with values 0 to MAX_BID - 1
+int free_index = 0;
 static int8_t free_list[MAX_BID];
 
 // use this code to shuffle the storage position of data blocks
