@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         numBlocks = 77;
     }
 
-    for(int i = 1; i <= numBlocks; i++){
+    for(int i = 1; i <= numBlocks + 1; i++){
         if(i != 13){
             read(fd, fileBuf, BLOCK_SIZE);
             write_block(i, fileBuf);
