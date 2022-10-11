@@ -66,8 +66,7 @@ int main(int argc, char *argv[]) {
     }else if(numBlocks < 13){
         numBlocks--;
     }
-
-    //reads in the file and stores across the blocks
+    //new implementation testing
     for(int i = 1; i <= numBlocks+1; i++){
         if(i != 13){
             read(fd, fileBuf, BLOCK_SIZE);
@@ -79,6 +78,19 @@ int main(int argc, char *argv[]) {
             indirectBuf[i - 14] = free_list[i];
         }
     }
+
+    //reads in the file and stores across the blocks
+    // for(int i = 1; i <= numBlocks+1; i++){
+    //     if(i != 13){
+    //         read(fd, fileBuf, BLOCK_SIZE);
+    //         write_block(free_list[i], fileBuf);
+    //     }
+    //     if(i < 14){
+    //         inode->addrs[i - 1] = free_list[i];
+    //     }else{
+    //         indirectBuf[i - 14] = free_list[i];
+    //     }
+    // }
     write_block(inode->addrs[NDIRECT], indirectBuf);
     write_block(0, (char *)inode);
     printf("file stored\n");
