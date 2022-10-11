@@ -39,12 +39,44 @@ int main(int argc, char *argv[])
     //     NDIRECT--;
     // }
 
-        // int bytes_left = inode->size;
-        // int numBlocks = inode->size/BLOCK_SIZE + 1;
-        // for(int i = 0; i < num_blocks; i++){
-            
+    int bytes_left = inode->size;
+    int num_blocks = inode->size/BLOCK_SIZE + 1;
+    if(num_blocks > NDIRECT){
+        num_blocks = NDIRECT;
+    }
+    for (int i = 0; i < num_blocks; i++) {
+        read_block(inode->addrs[i], buf);
+        if(bytes_left < BLOCK_SIZE){
+            write(1, buf, bytes_left);
+        }else{
+            write(1, buf, BLOCK_SIZE);
+            bytes_left -= BLOCK_SIZE;
+        }
+    }
+    read_block(inode->addrs[NDIRECT],indirectBuf);
+
+    int indirect_size = inode->size/BLOCK_SIZE - NDIRECT;
+        for (int i = 0; i <= indirect_size; i++) {
+        if(bytes_left < BLOCK_SIZE){
+            read_block(indirectBuf[i], buf);
+            write(1, buf, bytes_left);
+        }else{
+        read_block(indirectBuf[i], buf);
+        write(1, buf, BLOCK_SIZE);
+        bytes_left -= BLOCK_SIZE;
+        }
+    }
+
+    close_device();
+    return EXIT_SUCCESS;
+}
+        // }else{
+        //     read_block(indirectBuf[i], buf);
+        //     write(1, buf, BLOCK_SIZE);
+        //     bytes_left -= BLOCK_SIZE;
         // }
-        
+    
+
     // int bytes_left = inode->size;
     // for (int i = 0; i < NDIRECT; i++) {
     //     if(bytes_left < BLOCK_SIZE){
@@ -73,7 +105,3 @@ int main(int argc, char *argv[])
     //     bytes_left -= BLOCK_SIZE;
     //     }
     // }
-    close_device();
-    return EXIT_SUCCESS;
-
-}
