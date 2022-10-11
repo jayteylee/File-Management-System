@@ -7,45 +7,60 @@
 #include <fcntl.h>
 #include <errno.h>
 
-/**
- * The retrieving program should take no more than one command-line argument. If there
- * is no argument, the retrieved file should be printed to the standard output. If there is
- * an argument in the command e.g. ./retrieve-prog newfile, the retrieved file should
- * be saved to a file with the name newfile. You have to make sure not to overwrite an
- * existing file or to ask confirmation from the user to overwrite.
- *
- * The program should not assume any sequence of the stored data blocks. They could be
- * stored anywhere randomly on the RAMDISK.
- *
- * The retrieved file should be exactly the same as the stored file. You can use the command
- * e.g. ./store myfile.txt to store any file to the device according to the indexed
- * allocation. Then you can compare the stored file and retrieved file with diff.
- */
-
 char buf[BLOCK_SIZE];
-int bytes_left;
+int bytes_left, fd;
 
+/**
+ * A function to print out error messages
+ * 
+ * Parameters:
+ * int val -> int value representing files presence
+ * char *msg -> error message to be printed
+*/
+void checkerror(int val, char *msg) {
+    if (val < 0) {
+        perror(msg);
+        exit(0);
+    }
+}
+
+/**
+ * A function to write blocks to either the standard output or file (depending on fd)
+*/
 void write_buf(){
-    if (bytes_left < BLOCK_SIZE){
-        write(1, buf, bytes_left);
-    }else{
-        write(1, buf, BLOCK_SIZE);
+    if (bytes_left < BLOCK_SIZE) {
+        write(fd, buf, bytes_left);
+    }else {
+        write(fd, buf, BLOCK_SIZE);
         bytes_left -= BLOCK_SIZE;
     }
 }
 
-int main(int argc, char *argv[]){
+/**
+ * A retrieving program reads stored data blocks and writes them into either the standard output or
+ * a new textfile that is defined in the command-line as an argument.
+ * 
+ * Parameters: 
+ * int argc -> The number of command line arguments
+ * char *argv[] -> the array of command line arguments
+ * 
+ * Returns:
+ * int based on success or failure of program execution
+ */
+int main(int argc, char *argv[]) {
     int num_blocks, size;
     Inode *inode = malloc(BLOCK_SIZE);
     char indirectBuf[BLOCK_SIZE];
     if (argc > 2){
         printf("Usage: %s <file>\n", argv[0]);
         exit(0);
-    } else {
-        fd = open(argv[1], O_RDONLY);
+    } else if(argc == 2) {
+        fd = open(argv[1], O_RDWR | O_CREAT | O_EXCL, 0700);
         checkerror(fd, "open");
     }
-
+    else {
+        fd = 1;
+    }
     open_device();
     read_block(0, (char *)inode);
 
@@ -74,7 +89,6 @@ int main(int argc, char *argv[]){
         read_block(indirectBuf[i], buf);
         write_buf();
     }
-
     close_device();
     return EXIT_SUCCESS;
 }

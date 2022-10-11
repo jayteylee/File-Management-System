@@ -16,10 +16,10 @@ debug: debug.c libmemdrv.c libmemdrv.h fs.h
 	gcc $(CFLAGS) -o debug debug.c libmemdrv.c
 
 store-prog: store.c libmemdrv.c libmemdrv.h fs.h
-	gcc $(CFLAGS) -o store store.c libmemdrv.c
+	gcc $(CFLAGS) -o store-prog store.c libmemdrv.c
 
 retrieve-prog: retrieve.c libmemdrv.c libmemdrv.h fs.h
-	gcc $(CFLAGS) -o retrieve retrieve.c libmemdrv.c
+	gcc $(CFLAGS) -o retrieve-prog retrieve.c libmemdrv.c
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean

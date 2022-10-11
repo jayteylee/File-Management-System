@@ -8,7 +8,14 @@
 #include <fcntl.h>
 #include <errno.h>
 
-// function that shuffles the storage position of data blocks
+/**
+ * A function that shuffles an array of 8 bit integers on length n
+ * 
+ * Parameters: 
+ * int8_t *array -> the array of 8 bit integers
+ * int n -> length of the array
+ * 
+*/
 void shuffle(int8_t *array, int n) {
     for (int i = 0; i < n - 1; i++) {
         int j = i + rand() / (RAND_MAX / (n - i) + 1);
@@ -18,7 +25,13 @@ void shuffle(int8_t *array, int n) {
     }
 }
 
-// function to check if the file exists
+/**
+ * A function to print out error messages
+ * 
+ * Parameters:
+ * int val -> int value representing files presence
+ * char *msg -> error message to be printed
+*/
 void checkerror(int val, char *msg) {
     if (val < 0) {
         perror(msg);
@@ -27,23 +40,24 @@ void checkerror(int val, char *msg) {
 }
 
 /**
- * This program should take take a command-line argument, which is the name of a file that 
- * you want to store in /dev/memdrv.
+ * A program that reads and stores a file by splitting it up across 64 bit blocks
+ * An optional command line argument of '-r' can be used to randomise the order of
+ * the blocks.
  * 
- * If the length of the file is greater than 4864 bytes it should be truncated and the word 
- * truncated printed to stderr.
+ * Parameters: 
+ * int argc -> The number of command line arguments
+ * char *argv[] -> the array of command line arguments
  * 
- * The program should take an optional second command-line argument -r which specifies 
- * a random ordering of the blocks in the direct and indirect indexes.
-*/
-
-char file_buf[BLOCK_SIZE], indirect_buf[BLOCK_SIZE];
-int fd, size, num_blocks;
-struct stat st;
-static int8_t free_list[MAX_BID];
+ * Returns:
+ * int based on success or failure of program execution
+ */
 
 int main(int argc, char *argv[]) {
     Inode *inode = malloc(BLOCK_SIZE);
+    char file_buf[BLOCK_SIZE], indirect_buf[BLOCK_SIZE];
+    int fd, size, num_blocks;
+    struct stat st;
+    static int8_t free_list[MAX_BID];
 
     // initialising the free list
     for(int i = 0; i < MAX_BID; i++){
