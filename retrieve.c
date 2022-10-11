@@ -13,95 +13,68 @@
  * an argument in the command e.g. ./retrieve-prog newfile, the retrieved file should
  * be saved to a file with the name newfile. You have to make sure not to overwrite an
  * existing file or to ask confirmation from the user to overwrite.
- * 
+ *
  * The program should not assume any sequence of the stored data blocks. They could be
  * stored anywhere randomly on the RAMDISK.
- * 
+ *
  * The retrieved file should be exactly the same as the stored file. You can use the command
  * e.g. ./store myfile.txt to store any file to the device according to the indexed
  * allocation. Then you can compare the stored file and retrieved file with diff.
-*/
+ */
 
-char buf[BLOCK_SIZE], indirectBuf[BLOCK_SIZE];
+char buf[BLOCK_SIZE];
+int bytes_left;
 
-int main(int argc, char *argv[])
-{
+void write_buf(){
+    if (bytes_left < BLOCK_SIZE){
+        write(1, buf, bytes_left);
+    }else{
+        write(1, buf, BLOCK_SIZE);
+        bytes_left -= BLOCK_SIZE;
+    }
+}
+
+int main(int argc, char *argv[]){
+    int num_blocks, size;
     Inode *inode = malloc(BLOCK_SIZE);
-    if(argc > 2) {
+    char indirectBuf[BLOCK_SIZE];
+    if (argc > 2){
         printf("Usage: %s <file>\n", argv[0]);
         exit(0);
+    } else {
+        fd = open(argv[1], O_RDONLY);
+        checkerror(fd, "open");
     }
 
     open_device();
     read_block(0, (char *)inode);
 
-    // if(inode->size/BLOCK_SIZE + 1 < 13){
-    //     NDIRECT--;
-    // }
+    // initialise the size of the file
+    size = inode->size;
+    bytes_left = size;
 
-    int bytes_left = inode->size;
-    int num_blocks = inode->size/BLOCK_SIZE + 1;
-    if(num_blocks > NDIRECT){
+    // calculate the number of blocks used in the file.
+    num_blocks = size / BLOCK_SIZE + 1;
+
+    // if number of blocks are more than 12 - set to 12.
+    if (num_blocks > NDIRECT){
         num_blocks = NDIRECT;
     }
-    for (int i = 0; i < num_blocks; i++) {
+    // loop through and read/write direct addresses
+    for (int i = 0; i < num_blocks; i++){
         read_block(inode->addrs[i], buf);
-        if(bytes_left < BLOCK_SIZE){
-            write(1, buf, bytes_left);
-        }else{
-            write(1, buf, BLOCK_SIZE);
-            bytes_left -= BLOCK_SIZE;
-        }
+        write_buf();
     }
-    read_block(inode->addrs[NDIRECT],indirectBuf);
+    // read empty indirect buffer into 13th inode address.
+    read_block(inode->addrs[NDIRECT], indirectBuf);
 
-    int indirect_size = inode->size/BLOCK_SIZE - NDIRECT;
-        for (int i = 0; i <= indirect_size; i++) {
-        if(bytes_left < BLOCK_SIZE){
-            read_block(indirectBuf[i], buf);
-            write(1, buf, bytes_left);
-        }else{
+    // loops through indirect addresses and write to indirect block
+    int indirect_size = size / BLOCK_SIZE - NDIRECT;
+    for (int i = 0; i <= indirect_size; i++){
         read_block(indirectBuf[i], buf);
-        write(1, buf, BLOCK_SIZE);
-        bytes_left -= BLOCK_SIZE;
-        }
+        write_buf();
     }
 
     close_device();
     return EXIT_SUCCESS;
 }
-        // }else{
-        //     read_block(indirectBuf[i], buf);
-        //     write(1, buf, BLOCK_SIZE);
-        //     bytes_left -= BLOCK_SIZE;
-        // }
-    
-
-    // int bytes_left = inode->size;
-    // for (int i = 0; i < NDIRECT; i++) {
-    //     if(bytes_left < BLOCK_SIZE){
-    //     read_block(inode->addrs[i], buf);
-    //     write(1, buf, bytes_left);
-    //     }else{
-    //     read_block(indirectBuf[i], buf);
-    //     write(1, buf, BLOCK_SIZE);
-    //     bytes_left -= BLOCK_SIZE;
-    //     }
-    // }
-    // read_block(inode->addrs[NDIRECT],indirectBuf);
-
-    // int indirect_size = inode->size/BLOCK_SIZE - NDIRECT;
-
-    // if(indirect_size > BLOCK_SIZE){
-    //     indirect_size = BLOCK_SIZE;
-    // }
-    // for (int i = 0; i < indirect_size; i++) {
-    //     if(bytes_left < BLOCK_SIZE){
-    //         read_block(indirectBuf[i], buf);
-    //         write(1, buf, bytes_left);
-    //     }else{
-    //     read_block(indirectBuf[i], buf);
-    //     write(1, buf, BLOCK_SIZE);
-    //     bytes_left -= BLOCK_SIZE;
-    //     }
-    // }

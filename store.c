@@ -83,8 +83,9 @@ int main(int argc, char *argv[]) {
     }
     // if the file is greater than 4864 bytes
     if(size > 4864){
-        printf("truncated\n");
+        inode->size = 4864;
         num_blocks = 77;
+        printf("truncated\n");
     }
 
     // reads and writes each block from the file and stores the addresses in the inode and the indirect buffer
